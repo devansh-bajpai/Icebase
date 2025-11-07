@@ -2,7 +2,24 @@ import React from 'react'
 import Webcam from 'react-webcam';
 import axios from 'axios';
 
-function FaceVerify() {
+export const FaceVerify = ({
+  backendUrl = "",
+  interval = 2000,
+  width = 400,
+  height,
+  facingMode = "user",
+  onResult = () => {},
+  loadingText = "Verifying...",
+  verifiedText = "Verified ✅",
+  unverifiedText = "No face detected ❌",
+  style = {},
+  webcamStyle = {}
+}) => {
+  const webcamRef = useRef(null);
+  const [status, setStatus] = useState('Waiting...');
+  const [isVerifying, setIsVerifying] = useState(false);
+
+
   return (
     <div style={{ textAlign: 'center', marginTop: 20, ...style }}>
       <h2>Face Verification</h2>
