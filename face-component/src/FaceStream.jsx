@@ -18,7 +18,29 @@ export const FaceVerify = ({
   const webcamRef = useRef(null);
   const [status, setStatus] = useState('Waiting...');
   const [isVerifying, setIsVerifying] = useState(false);
+  const captureAndVerify = async () => {
+    if (!webcamRef.current) return;
 
+    const imageSrc = webcamRef.current.getScreenshot();
+    if (!imageSrc) return;
+
+    try {
+      setIsVerifying(true);
+
+      const res = await axios.post(backendUrl, { image: imageSrc });
+      const result = res.data?.status || 'no_face'; // backend expected to return {status: 'verified'} or 'no_face'
+
+      const message = result === 'verified' ? verifiedText : unverifiedText;
+      setStatus(message);
+      onResult(result);
+
+    } catch (err) {
+      console.error('Verification error:', err);
+      setStatus('Error during verification');
+    } finally {
+      setIsVerifying(false);
+    }
+  };
 
   return (
     <div style={{ textAlign: 'center', marginTop: 20, ...style }}>
