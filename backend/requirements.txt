@@ -1,0 +1,7 @@
+opencv-python
+numpy==1.26.4
+faiss-cpu==1.7.4
+python-dotenv
+face_recognition
+cryptography
+dlib/dlib-19.24.1-cp311-cp311-win_amd64.whl
