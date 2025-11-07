@@ -1,10 +1,13 @@
 import axios from "axios";
 
-const API_URL = "http://localhost:5000/api/auth";
+const AUTH_API = "http://localhost:5000/api/auth";
+const PASSWORD_API = "http://localhost:5000/api/password";
 
-export const registerUser = (data) => axios.post(`${API_URL}/register`, data);
-export const verifyEmailOTP = (data) => axios.post(`${API_URL}/verify-otp`, data);
-export const resendEmailOTP = (data) => axios.post(`${API_URL}/resend-otp`, data);
-export const loginUser = (data) => axios.post(`${API_URL}/login`, data);
-export const forgotPassword = (data) => axios.post(`${API_URL}/forgot-password`, data);
-export const resetPassword = (data) => axios.post(`${API_URL}/reset-password`, data);
+export const registerUser = (data) => axios.post(`${AUTH_API}/register`, data);
+export const verifyEmailOTP = (data) => axios.post(`${AUTH_API}/verify-otp`, data);
+export const resendEmailOTP = (data) => axios.post(`${AUTH_API}/resend-otp`, data);
+export const loginUser = (data) => axios.post(`${AUTH_API}/login`, data);
+
+// Password flows (token-based)
+export const forgotPassword = (data) => axios.post(`${PASSWORD_API}/forgot`, data);
+export const resetPassword = (token, data) => axios.put(`${PASSWORD_API}/reset/${token}`, data);

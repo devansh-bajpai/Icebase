@@ -1,19 +1,20 @@
 import React, { useState } from "react";
 import { resetPassword } from "../api/auth";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 export default function ResetPassword() {
-  const [form, setForm] = useState({ email: "", otp: "", newPassword: "" });
+  const [form, setForm] = useState({ newPassword: "" });
   const [message, setMessage] = useState("");
   const navigate = useNavigate();
+  const { token } = useParams();
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await resetPassword(form);
-      setMessage(res.data.message);
+      const res = await resetPassword(token, { password: form.newPassword });
+      setMessage({ text: res.data.message, type: 'success' });
       
       // Navigate to login after 2 seconds on success
       setTimeout(() => {
@@ -35,21 +36,6 @@ export default function ResetPassword() {
     <div className="form-container">
       <h2>Reset Password</h2>
       <form onSubmit={handleSubmit}>
-        <input
-          name="email"
-          type="email"
-          placeholder="Registered Email"
-          value={form.email}
-          onChange={handleChange}
-          required
-        />
-        <input
-          name="otp"
-          placeholder="Enter OTP"
-          value={form.otp}
-          onChange={handleChange}
-          required
-        />
         <input
           name="newPassword"
           type="password"
