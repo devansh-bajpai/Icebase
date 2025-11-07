@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useRef, useState, useEffect } from 'react';
 import Webcam from 'react-webcam';
 import axios from 'axios';
 
@@ -18,6 +18,8 @@ export const FaceVerify = ({
   const webcamRef = useRef(null);
   const [status, setStatus] = useState('Waiting...');
   const [isVerifying, setIsVerifying] = useState(false);
+
+  // Capture frame and send to backend
   const captureAndVerify = async () => {
     if (!webcamRef.current) return;
 
@@ -42,12 +44,21 @@ export const FaceVerify = ({
     }
   };
 
+  // Run periodically
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      captureAndVerify();
+    }, interval);
+
+    return () => clearInterval(intervalId);
+  }, [interval, backendUrl]);
+
   return (
     <div style={{ textAlign: 'center', marginTop: 20, ...style }}>
       <h2>Face Verification</h2>
 
       <Webcam
-        ref={}
+        ref={webcamRef}
         screenshotFormat="image/jpeg"
         width={width}
         height={height}
@@ -63,11 +74,11 @@ export const FaceVerify = ({
         {isVerifying ? (
           <p>{loadingText}</p>
         ) : (
-          <h3>{}</h3>
+          <h3>{status}</h3>
         )}
       </div>
     </div>
   );
-}
+};
 
-export default FaceVerify
+export default FaceVerify;
