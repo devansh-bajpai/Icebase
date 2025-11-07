@@ -3,16 +3,19 @@ import numpy as np
 
 def searchUser(enc):
     enc = enc.astype("float32")
-    index = getIndex()["index"]
+    
+    indexResponse = getIndex()
+    if(indexResponse["code"] != 200):
+        return {"code": 500, "message": "Error while getting index."}
+    else:
+        index = indexResponse["index"]
 
     k = 1
     D, I = index.search(np.array([enc]), k)
 
-    print("Distance:", D[0][0])
-    print("Matched index:", I[0][0])
-
     threshold = 0.2
     if D[0][0] < threshold:
-        print("✅ Match found:", I[0][0])
+        print("Match found")
+        return {"code": 200, "message": "Match found", "uid": I[0][0]}
     else:
-        print("❌ No match found")
+        return {"code": 404, "message": "No match found"}
