@@ -1,4 +1,4 @@
-from getIndex import getIndex
+from encryption.getIndex import getIndex
 import numpy as np
 
 def searchUser(enc):
@@ -15,7 +15,6 @@ def searchUser(enc):
 
     threshold = 0.2
     if D[0][0] < threshold:
-        print("Match found")
-        return {"code": 200, "message": "Match found", "uid": I[0][0]}
+        return {"code": 200, "message": "Match found", "uid": int(I[0][0])}
     else:
         return {"code": 404, "message": "No match found"}

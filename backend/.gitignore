@@ -1,2 +1,4 @@
-/dlib
 /myvenv
+app/.env
+app/encryption/faces_encrypted.index
+app/encryption/temp.index

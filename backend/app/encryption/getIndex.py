@@ -10,7 +10,7 @@ def getIndex():
     key = os.getenv("ENCRYPTION_KEY")
 
     try:
-        with open("faces_encrypted.index", "rb") as f:
+        with open("encryption/faces_encrypted.index", "rb") as f:
             encrypted = f.read()
     except FileNotFoundError:
         return {"code": 404, "message": "Encrypted file is not found."}
@@ -19,12 +19,12 @@ def getIndex():
     plainText = fernet.decrypt(encrypted)
 
     try:
-        with open("temp.index", "wb") as f:
+        with open("encryption/temp.index", "wb") as f:
             f.write(plainText)
     except Exception:
         return {"code": 500, "message": "Error while writing index file."}
 
-    index = faiss.read_index("temp.index")
-    os.remove("temp.index")
+    index = faiss.read_index("encryption/temp.index")
+    os.remove("encryption/temp.index")
 
     return {"code": 200, "message": "Returned Index file successfully", "index": index}
