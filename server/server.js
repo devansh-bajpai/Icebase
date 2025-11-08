@@ -6,6 +6,7 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import authRoutes from "./routes/authRoutes.js";
 import passwordRoutes from "./routes/passwordRoutes.js";
+import apiKeyRoutes from "./routes/apiKeyRoutes.js";
 
 dotenv.config();
 
@@ -30,6 +31,7 @@ app.use(
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/password", passwordRoutes);
+app.use("/api/keys", apiKeyRoutes);
 
 app.get("/", (req, res) => {
   res.send("Secure Login System API Running...");
