@@ -59,6 +59,7 @@ def handle_image(data):
             print("No face detected")
 
 
+#  To find user ID with video
 @celery_app.task
 def handle_video(data, sid):
     base64_string = data
@@ -81,6 +82,8 @@ def handle_video(data, sid):
             print(searchResponse)
 
             if(searchResponse["code"] == 200):
+                # adding search log to mongodb
+                addLogToMongo(os.getenv("API_KEY"), searchResponse["uid"], "search")
                 return {"code": 200, "message": "User found", "uid": searchResponse["uid"], "sid": sid}
             elif(searchResponse["code"] == 404):
                 return {"code": 404, "message": "No match found", "sid": sid}
@@ -89,7 +92,7 @@ def handle_video(data, sid):
         else:
             return {"code": 404, "message": "Face not found", "sid": sid}
 
-
+#  Used to Create New User in DB
 @celery_app.task
 def handle_video_addToIndex(data, uid, sid):
     base64_string = data
@@ -98,7 +101,7 @@ def handle_video_addToIndex(data, uid, sid):
     if(uidExistResponse["code"] == 500):
         return {"code": 500, "message": "Error while checking existence of UID"}
     elif(uidExistResponse["code"] == 200 and uidExistResponse["value"] == True):
-        return {"code": 400, "message": "User already exists"}
+        return {"code": 400, "message": "User with current UID already exists"}
 
 
     if "," in base64_string:
@@ -122,7 +125,8 @@ def handle_video_addToIndex(data, uid, sid):
             elif(searchResponse["code"] == 404):
                 addToIndexResponse = addToIndex([enc], [uid])
                 if(addToIndexResponse["code"] == 200):
-                    addLogToMongo(os.getenv("API_KEY"), uid)
+                    # adding signup log to mongodb
+                    addLogToMongo(os.getenv("API_KEY"), uid, "create")
                     return {"code": 200, "message": "Added to Index", "sid": sid, "uid": uid}
                 else:
                     return {"code": 500, "message": "Couldn't add index", "sid": sid, "uid": uid}
@@ -135,4 +139,4 @@ def handle_video_addToIndex(data, uid, sid):
 # def task_completed_handler(sender=None, result=None, **kwargs):
 #     """Called automatically when any task succeeds."""
 #     if sender.name == "celery_worker.handle_video":
-#         socketio.emit("video_result", {"result": result}, to=result["sid"])
+#         socketio.emit("test", {"result": result}, to=result["sid"])
