@@ -26,7 +26,7 @@ celery_app = Celery(
     broker=f"redis://{REDIS_HOST}:{REDIS_PORT}/0",
     backend=f"redis://{REDIS_HOST}:{REDIS_PORT}/0"
 )
-# socketio = SocketIO(message_queue="redis://localhost:6379/0")
+socketio = SocketIO(message_queue=f"redis://{REDIS_HOST}:{REDIS_PORT}/0")
 
 
 @celery_app.task
@@ -135,8 +135,27 @@ def handle_video_addToIndex(data, uid, sid):
         else:
             return {"code": 404, "message": "Face not found", "sid": sid}
 
+@signals.task_success.connect
+def task_completed_handler(sender=None, result=None, **kwargs):
+    """Called automatically when any task succeeds."""
+    if sender.name == "celery_worker.handle_video":
+        # print(result["sid"], "aejghkaejbgaeh")
+        socketio.emit("test", {"result": result}, to=result["sid"])
+        print("socket request emitted")
+
+
+
 # @signals.task_success.connect
 # def task_completed_handler(sender=None, result=None, **kwargs):
 #     """Called automatically when any task succeeds."""
+#     print(f"Task completed: {sender.name}, result type: {type(result)}")
 #     if sender.name == "celery_worker.handle_video":
-#         socketio.emit("test", {"result": result}, to=result["sid"])
+#         print(f"Handling handle_video task completion, result: {result}")
+#         if isinstance(result, dict) and "sid" in result:
+#             try:
+#                 socketio.emit("test", {"result": result}, to=result["sid"])
+#                 print(f"Socket request emitted to sid: {result['sid']}")
+#             except Exception as e:
+#                 print(f"Error emitting socket message: {e}")
+#         else:
+#             print(f"Result is not a dict with 'sid' key: {result}")

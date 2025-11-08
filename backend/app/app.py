@@ -1,4 +1,5 @@
 import base64
+import os
 from flask import Flask, request
 from celery_worker import long_task
 from flask_socketio import SocketIO, send, emit
@@ -9,7 +10,10 @@ from celery_worker import handle_video_addToIndex
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
-socketio = SocketIO(app, cors_allowed_origins="*")
+
+REDIS_HOST = os.environ.get("REDIS_HOST", "redis")
+REDIS_PORT = os.environ.get("REDIS_PORT", 6379)
+socketio = SocketIO(app, cors_allowed_origins="*", message_queue=f"redis://{REDIS_HOST}:{REDIS_PORT}/0")
 
 @socketio.on("connect")
 def handle_connect():
