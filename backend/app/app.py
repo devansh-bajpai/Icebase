@@ -5,6 +5,7 @@ from flask_socketio import SocketIO, send, emit
 
 from celery_worker import handle_image
 from celery_worker import handle_video
+from celery_worker import handle_video_addToIndex
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
@@ -36,6 +37,15 @@ def handle_video_find(data):
     print(f"findUserWithVideo called with sid: {sid}")
     base64_string = data["img"]
     task = handle_video.delay(base64_string, sid)
+
+@socketio.on("addUserWithVideo")
+def handle_video_add(data):
+    sid = request.sid
+    base64_string = data["img"]
+    uid = data["uid"]
+    print(uid, "yayaya")
+
+    task = handle_video_addToIndex.delay(base64_string,uid, sid)
 
 
 if __name__ == "__main__":

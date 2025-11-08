@@ -7,6 +7,7 @@ import numpy as np
 import base64
 
 from encryption.searchUser import searchUser
+from encryption.addToIndex import addToIndex
 import face_recognition
 
 from flask_socketio import SocketIO, send, emit
@@ -19,7 +20,7 @@ celery_app = Celery(
     broker=f"redis://{REDIS_HOST}:{REDIS_PORT}/0",
     backend=f"redis://{REDIS_HOST}:{REDIS_PORT}/0"
 )
-socketio = SocketIO(message_queue="redis://localhost:6379/0")
+# socketio = SocketIO(message_queue="redis://localhost:6379/0")
 
 
 @celery_app.task
@@ -70,7 +71,6 @@ def handle_video(data, sid):
         encodings = face_recognition.face_encodings(img)
         if(len(encodings) > 0):
             enc = encodings[0]
-            print("fukkk")
             searchResponse = searchUser(enc)
             print(searchResponse)
 
@@ -84,9 +84,40 @@ def handle_video(data, sid):
             return {"code": 404, "message": "Face not found", "sid": sid}
 
 
+@celery_app.task
+def handle_video_addToIndex(data, uid, sid):
+    base64_string = data
 
-@signals.task_success.connect
-def task_completed_handler(sender=None, result=None, **kwargs):
-    """Called automatically when any task succeeds."""
-    if sender.name == "celery_worker.handle_video":
-        socketio.emit("video_result", {"result": result}, to=result["sid"])
+    if "," in base64_string:
+        base64_string = base64_string.split(",")[1]
+
+    image_bytes = base64.b64decode(base64_string)
+    nparr = np.frombuffer(image_bytes, np.uint8)
+    img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+
+    if img is None:
+        return {"code": 500, "message": "Failed to decode image", "sid": sid, "uid": uid}
+    else:
+        encodings = face_recognition.face_encodings(img)
+        if(len(encodings) > 0):
+            enc = encodings[0]
+            searchResponse = searchUser(enc)
+
+            if(searchResponse["code"] == 200):
+                return {"code": 400, "message": "User Already Exists", "uid": searchResponse["uid"], "sid": sid}
+            elif(searchResponse["code"] == 404):
+                addToIndexResponse = addToIndex([enc], [uid])
+                if(addToIndexResponse["code"] == 200):
+                    return {"code": 200, "message": "Added to Index", "sid": sid, "uid": uid}
+                else:
+                    return {"code": 500, "message": "Couldn't add index", "sid": sid, "uid": uid}
+            else:
+                return {"code": 500, "message": "Internal server error", "sid": sid}
+        else:
+            return {"code": 404, "message": "Face not found", "sid": sid}
+
+# @signals.task_success.connect
+# def task_completed_handler(sender=None, result=None, **kwargs):
+#     """Called automatically when any task succeeds."""
+#     if sender.name == "celery_worker.handle_video":
+#         socketio.emit("video_result", {"result": result}, to=result["sid"])

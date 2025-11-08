@@ -12,6 +12,7 @@ def searchUser(enc):
 
     k = 1
     D, I = index.search(np.array([enc]), k)
+    print("distance = ", D[0][0])
 
     threshold = 0.2
     if D[0][0] < threshold:
