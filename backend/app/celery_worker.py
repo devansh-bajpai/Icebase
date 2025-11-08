@@ -76,7 +76,7 @@ def handle_video(data, sid):
 
     else:
         encodings = face_recognition.face_encodings(img)
-        if(len(encodings) > 0):
+        if(len(encodings) == 1):
             enc = encodings[0]
             searchResponse = searchUser(enc)
             print(searchResponse)
@@ -89,8 +89,10 @@ def handle_video(data, sid):
                 return {"code": 404, "message": "No match found", "sid": sid}
             else:
                 return {"code": 500, "message": "Internal server error", "sid": sid}
-        else:
+        elif(len(encodings) == 0):
             return {"code": 404, "message": "Face not found", "sid": sid}
+        else:
+            return {"code": 500, "message": "There should be only 1 face at a time", "sid": sid}
 
 #  Used to Create New User in DB
 @celery_app.task
