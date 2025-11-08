@@ -3,87 +3,94 @@ import crypto from "crypto";
 import User from "../models/User.js";
 import transporter from "../config/mail.js";
 import { validatePassword } from "../middleware/passwordValidator.js";
+import sendEmail from "../utils/sendEmail.js";
+//
+// FORGOT PASSWORD (OTP)
+//
 
-//
-// FORGOT PASSWORD — send reset link
-//
 export const forgotPassword = async (req, res) => {
   try {
-    const { email } = req.body;
+    if (!req.body || !req.body.email) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Email is required" 
+      });
+    }
+    
+    let { email } = req.body;
+    
+    // Normalize email
+    email = email.toLowerCase();
+    
     const user = await User.findOne({ email });
+    if (!user) return res.status(400).json({ success: false, message: "User not found" });
 
-    if (!user)
-      return res.status(404).json({ success: false, message: "No account with this email" });
-
-    // Generate reset token
-    const resetToken = user.getResetPasswordToken();
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    user.resetPasswordOTP = otp;
+    user.resetPasswordOTPExpire = Date.now() + 10 * 60 * 1000; // 10 min
     await user.save();
 
-    // Build reset URL
-    const resetUrl = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
+    const message = `
+      <p>Use this OTP to reset your password:</p>
+      <h3>${otp}</h3>
+      <p>This OTP expires in 10 minutes.</p>
+    `;
+    await sendEmail({ to: user.email, subject: "Reset Password OTP", html: message });
 
-    // Send email
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
-      to: user.email,
-      subject: "Password Reset Request",
-      html: `
-        <p>Hello ${user.name},</p>
-        <p>You requested a password reset. Click below to reset your password:</p>
-        <a href="${resetUrl}">${resetUrl}</a>
-        <p>This link expires in 10 minutes.</p>
-        <p>If you did not request this, please ignore this email.</p>
-      `,
-    });
-
-    res.status(200).json({
-      success: true,
-      message: "Password reset email sent. Check your inbox.",
-    });
+    res.status(200).json({ success: true, message: "OTP sent to your email" });
   } catch (error) {
+    console.error("Forgot Password error:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
 
 //
-// RESET PASSWORD — verify token and update
+
+
+
+// RESET PASSWORD (OTP)
 //
 export const resetPassword = async (req, res) => {
   try {
-    const { token } = req.params;
-    const { password } = req.body;
+    if (!req.body) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Request body is required" 
+      });
+    }
+    
+    const { email, otp, newPassword } = req.body;
+    
+    if (!email || !otp || !newPassword) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Email, OTP, and new password are required" 
+      });
+    }
+    
+    const normalizedEmail = email.toLowerCase();
+    const user = await User.findOne({ email: normalizedEmail }).select("+password");
+    if (!user) return res.status(401).json({ success: false, message: "Invalid credentials" });
 
-    // Validate strong password
-    if (!validatePassword(password))
+    if (!user.resetPasswordOTP || user.resetPasswordOTP !== otp || user.resetPasswordOTPExpire < Date.now())
+      return res.status(400).json({ success: false, message: "Invalid or expired OTP" });
+
+    if (!validatePassword(newPassword))
       return res.status(400).json({
         success: false,
-        message:
-          "Password must include 8+ chars, uppercase, lowercase, number, and special symbol",
+        message: "Password must include 8+ chars, uppercase, lowercase, number, and special symbol",
       });
 
-    // Hash token and find user
-    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
-
-    const user = await User.findOne({
-      resetPasswordToken: hashedToken,
-      resetPasswordExpire: { $gt: Date.now() },
-    });
-
-    if (!user)
-      return res.status(400).json({ success: false, message: "Invalid or expired token" });
-
-    // Set new password
-    user.password = password;
-    user.resetPasswordToken = undefined;
-    user.resetPasswordExpire = undefined;
-
+    // Assign plain password and let pre-save hook hash it
+    user.password = newPassword;
+    user.resetPasswordOTP = undefined;
+    user.resetPasswordOTPExpire = undefined;
     await user.save();
 
-    res.status(200).json({
-      success: true,
-      message: "Password reset successfully. You can now log in.",
-    });
+    res.status(200).json({ success: true, message: "Password reset successful" });
   } catch (error) {
+    console.error("Reset Password error:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
+

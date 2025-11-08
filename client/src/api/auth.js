@@ -8,6 +8,6 @@ export const verifyEmailOTP = (data) => axios.post(`${AUTH_API}/verify-otp`, dat
 export const resendEmailOTP = (data) => axios.post(`${AUTH_API}/resend-otp`, data);
 export const loginUser = (data) => axios.post(`${AUTH_API}/login`, data);
 
-// Password flows (token-based)
+// Password flows (OTP-based)
 export const forgotPassword = (data) => axios.post(`${PASSWORD_API}/forgot`, data);
-export const resetPassword = (token, data) => axios.put(`${PASSWORD_API}/reset/${token}`, data);
+export const resetPassword = (data) => axios.put(`${PASSWORD_API}/reset`, data);

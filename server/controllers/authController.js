@@ -9,7 +9,10 @@ import { validatePassword } from "../middleware/passwordValidator.js";
 //register
 export const registerUser = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    let { name, email, password } = req.body;
+    
+    // Normalize email
+    email = email.toLowerCase();
 
     if (!name || !email || !password)
       return res.status(400).json({ success: false, message: "All fields are required" });
@@ -54,7 +57,11 @@ export const registerUser = async (req, res) => {
 
 export const verifyEmailOTP = async (req, res) => {
   try {
-    const { email, otp } = req.body;
+    let { email, otp } = req.body;
+    
+    // Normalize email
+    email = email.toLowerCase();
+    
     const user = await User.findOne({ email });
     if (!user) return res.status(400).json({ success: false, message: "Invalid email" });
 
@@ -81,7 +88,11 @@ export const verifyEmailOTP = async (req, res) => {
 
 export const resendEmailOTP = async (req, res) => {
   try {
-    const { email } = req.body;
+    let { email } = req.body;
+    
+    // Normalize email
+    email = email.toLowerCase();
+    
     const user = await User.findOne({ email });
     if (!user) return res.status(400).json({ success: false, message: "User not found" });
 
@@ -199,62 +210,3 @@ export const loginUser = async (req, res) => {
 };
 
 //
-// FORGOT PASSWORD (OTP)
-//
-export const forgotPassword = async (req, res) => {
-  try {
-    const { email } = req.body;
-    const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ success: false, message: "User not found" });
-
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    user.resetPasswordOTP = otp;
-    user.resetPasswordOTPExpire = Date.now() + 10 * 60 * 1000; // 10 min
-    await user.save();
-
-    const message = `
-      <p>Use this OTP to reset your password:</p>
-      <h3>${otp}</h3>
-      <p>This OTP expires in 10 minutes.</p>
-    `;
-    await sendEmail({ to: user.email, subject: "Reset Password OTP", html: message });
-
-    res.status(200).json({ success: true, message: "OTP sent to your email" });
-  } catch (error) {
-    console.error("Forgot Password error:", error);
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-
-//
-// RESET PASSWORD (OTP)
-//
-export const resetPassword = async (req, res) => {
-  try {
-    const { email, otp, newPassword } = req.body;
-    const normalizedEmail = email?.toLowerCase();
-    const user = await User.findOne({ email: normalizedEmail }).select("+password");
-    if (!user) return res.status(401).json({ success: false, message: "Invalid credentials" });
-
-    if (!user.resetPasswordOTP || user.resetPasswordOTP !== otp || user.resetPasswordOTPExpire < Date.now())
-      return res.status(400).json({ success: false, message: "Invalid or expired OTP" });
-
-    if (!validatePassword(newPassword))
-      return res.status(400).json({
-        success: false,
-        message: "Password must include 8+ chars, uppercase, lowercase, number, and special symbol",
-      });
-
-    // Assign plain password and let pre-save hook hash it
-    user.password = newPassword;
-    user.resetPasswordOTP = undefined;
-    user.resetPasswordOTPExpire = undefined;
-    await user.save();
-
-    res.status(200).json({ success: true, message: "Password reset successful" });
-  } catch (error) {
-    console.error("Reset Password error:", error);
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-

@@ -7,7 +7,7 @@ const router = express.Router();
 // Forgot password (send reset email)
 router.post("/forgot", forgotPassword);
 
-// Reset password (verify token and change password)
-router.put("/reset/:token", resetPassword);
+// Reset password (OTP-based)
+router.put("/reset", resetPassword);
 
 export default router;

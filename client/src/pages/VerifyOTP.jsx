@@ -31,6 +31,14 @@ export default function VerifyOTP() {
 
   const handleResend = async () => {
     try {
+      if (!email) {
+        setMessage({
+          text: "Email not found. Please register again.",
+          type: "error"
+        });
+        return;
+      }
+      
       console.log('Attempting to resend OTP to:', email);
       const res = await resendEmailOTP({ email });
       
@@ -39,14 +47,8 @@ export default function VerifyOTP() {
         type: "success"
       });
       
-      // Navigate to login after 2 seconds
-      setTimeout(() => {
-        navigate('/login', { 
-          state: { 
-            message: 'A new OTP has been sent to your email. Please check and verify.' 
-          } 
-        });
-      }, 2000);
+      // Clear the OTP input field
+      setOtp("");
     } catch (err) {
       console.error('Error in handleResend:', err); // Debug log
       const errorMessage = err.response?.data?.message || 

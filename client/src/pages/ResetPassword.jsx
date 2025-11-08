@@ -1,20 +1,42 @@
 import React, { useState } from "react";
 import { resetPassword } from "../api/auth";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 export default function ResetPassword() {
-  const [form, setForm] = useState({ newPassword: "" });
+  const [form, setForm] = useState({ 
+    email: "", 
+    otp: "", 
+    newPassword: "",
+    confirmPassword: ""
+  });
   const [message, setMessage] = useState("");
   const navigate = useNavigate();
-  const { token } = useParams();
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validate passwords match
+    if (form.newPassword !== form.confirmPassword) {
+      setMessage({
+        text: "Passwords do not match",
+        type: 'error'
+      });
+      return;
+    }
+
     try {
-      const res = await resetPassword(token, { password: form.newPassword });
-      setMessage({ text: res.data.message, type: 'success' });
+      const res = await resetPassword({
+        email: form.email,
+        otp: form.otp,
+        newPassword: form.newPassword
+      });
+      
+      setMessage({
+        text: res.data.message,
+        type: 'success'
+      });
       
       // Navigate to login after 2 seconds on success
       setTimeout(() => {
@@ -36,11 +58,36 @@ export default function ResetPassword() {
     <div className="form-container">
       <h2>Reset Password</h2>
       <form onSubmit={handleSubmit}>
+        <>
+          <input
+            name="email"
+            type="email"
+            placeholder="Registered Email"
+            value={form.email}
+            onChange={handleChange}
+            required
+          />
+          <input
+            name="otp"
+            placeholder="Enter OTP"
+            value={form.otp}
+            onChange={handleChange}
+            required
+          />
+        </>
         <input
           name="newPassword"
           type="password"
           placeholder="New Password"
           value={form.newPassword}
+          onChange={handleChange}
+          required
+        />
+        <input
+          name="confirmPassword"
+          type="password"
+          placeholder="Confirm New Password"
+          value={form.confirmPassword}
           onChange={handleChange}
           required
         />
