@@ -25,7 +25,6 @@ def handle_frame(data):
     base64_string = data["img"]
     task = handle_image.delay(base64_string)
 
-
 @socketio.on("findUserWithImage")
 def handle_image_find():
     pass
