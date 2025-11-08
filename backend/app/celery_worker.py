@@ -9,6 +9,10 @@ import base64
 from encryption.searchUser import searchUser
 from encryption.addToIndex import addToIndex
 from encryption.checkIfUIDExists import checkIfUIDExists
+from encryption.addToMongo import addLogToMongo
+
+from dotenv import load_dotenv
+load_dotenv()
 
 import face_recognition
 
@@ -108,6 +112,7 @@ def handle_video_addToIndex(data, uid, sid):
         return {"code": 500, "message": "Failed to decode image", "sid": sid, "uid": uid}
     else:
         encodings = face_recognition.face_encodings(img)
+        
         if(len(encodings) > 0):
             enc = encodings[0]
             searchResponse = searchUser(enc)
@@ -117,6 +122,7 @@ def handle_video_addToIndex(data, uid, sid):
             elif(searchResponse["code"] == 404):
                 addToIndexResponse = addToIndex([enc], [uid])
                 if(addToIndexResponse["code"] == 200):
+                    addLogToMongo(os.getenv("API_KEY"), uid)
                     return {"code": 200, "message": "Added to Index", "sid": sid, "uid": uid}
                 else:
                     return {"code": 500, "message": "Couldn't add index", "sid": sid, "uid": uid}

@@ -76,11 +76,9 @@ def checkIfUIDExists(uid):
     
     index = indexResponse["index"]
 
-    # Ensure it's an IDMap index
     if not isinstance(index, faiss.IndexIDMap) and not isinstance(index, faiss.IndexIDMap2):
         return {"code": 400, "message": "Index does not store IDs (not an IndexIDMap)"}
 
-    # Convert FAISS Int64Vector to NumPy array
     stored_ids = faiss.vector_to_array(index.id_map)
 
     exists = uid in stored_ids
