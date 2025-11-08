@@ -30,7 +30,7 @@ export const FaceVerify = ({
     setSocket(newSocket);
 
     // Listen for verification results from the backend
-    newSocket.on('verification_result', (data) => {
+    newSocket.on('video_result', (data) => {
       setIsVerifying(false);
       const result = data.status;
       const message = result === 'verified' ? verifiedText : unverifiedText;
@@ -54,7 +54,7 @@ export const FaceVerify = ({
     setIsVerifying(true);
     setStatus(loadingText);
 
-    socket.emit('verify_face', { image: imageSrc });
+    socket.emit('sendImageWithVideo', { image: imageSrc });
   };
 
   // Run periodically
