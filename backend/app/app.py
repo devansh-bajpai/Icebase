@@ -28,7 +28,8 @@ def handle_disconnect():
 @socketio.on("frame")
 def handle_frame(data):
     base64_string = data["img"]
-    task = handle_image.delay(base64_string)
+    API_KEY = data["apikey"]
+    task = handle_image.delay(base64_string, API_KEY)
 
 @socketio.on("findUserWithImage")
 def handle_image_find():
@@ -37,18 +38,20 @@ def handle_image_find():
 
 @socketio.on("findUserWithVideo")
 def handle_video_find(data):
+    API_KEY = data["apikey"]
     sid = request.sid
     print(f"findUserWithVideo called with sid: {sid}")
     base64_string = data["img"]
-    task = handle_video.delay(base64_string, sid)
+    task = handle_video.delay(base64_string, sid, API_KEY)
 
 @socketio.on("addUserWithVideo")
 def handle_video_add(data):
     sid = request.sid
     base64_string = data["img"]
     uid = data["uid"]
+    API_KEY = data["apikey"]
 
-    task = handle_video_addToIndex.delay(base64_string,uid, sid)
+    task = handle_video_addToIndex.delay(base64_string,uid, sid, API_KEY)
 
 
 if __name__ == "__main__":

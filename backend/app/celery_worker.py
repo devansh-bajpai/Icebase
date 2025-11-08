@@ -10,6 +10,7 @@ from encryption.searchUser import searchUser
 from encryption.addToIndex import addToIndex
 from encryption.checkIfUIDExists import checkIfUIDExists
 from encryption.addToMongo import addLogToMongo
+from encryption.apiValid import isAPIValid
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -38,7 +39,9 @@ def long_task(n):
 
 
 @celery_app.task
-def handle_image(data):
+def handle_image(data, API_KEY):
+    if(isAPIValid(API_KEY) == False):
+        return {"code": 404, "message": "Invalid API Key"}
     base64_string = data
 
     if "," in base64_string:
@@ -61,7 +64,10 @@ def handle_image(data):
 
 #  To find user ID with video
 @celery_app.task
-def handle_video(data, sid):
+def handle_video(data, sid, API_KEY):
+    if(isAPIValid(API_KEY) == False):
+        return {"code": 504, "message": "Invalid API Key", "sid": sid}
+        
     base64_string = data
 
     if "," in base64_string:
@@ -83,7 +89,7 @@ def handle_video(data, sid):
 
             if(searchResponse["code"] == 200):
                 # adding search log to mongodb
-                addLogToMongo(os.getenv("API_KEY"), searchResponse["uid"], "search")
+                addLogToMongo(API_KEY, searchResponse["uid"], "search")
                 return {"code": 200, "message": "User found", "uid": searchResponse["uid"], "sid": sid}
             elif(searchResponse["code"] == 404):
                 return {"code": 404, "message": "No match found", "sid": sid}
@@ -96,7 +102,10 @@ def handle_video(data, sid):
 
 #  Used to Create New User in DB
 @celery_app.task
-def handle_video_addToIndex(data, uid, sid):
+def handle_video_addToIndex(data, uid, sid, API_KEY):
+    if(isAPIValid(API_KEY) == False):
+        return {"code": 404, "message": "Invalid API Key"}
+
     base64_string = data
 
     uidExistResponse = checkIfUIDExists(uid)
@@ -128,7 +137,7 @@ def handle_video_addToIndex(data, uid, sid):
                 addToIndexResponse = addToIndex([enc], [uid])
                 if(addToIndexResponse["code"] == 200):
                     # adding signup log to mongodb
-                    addLogToMongo(os.getenv("API_KEY"), uid, "create")
+                    addLogToMongo(API_KEY, uid, "create")
                     return {"code": 200, "message": "Added to Index", "sid": sid, "uid": uid}
                 else:
                     return {"code": 500, "message": "Couldn't add index", "sid": sid, "uid": uid}
