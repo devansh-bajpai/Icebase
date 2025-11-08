@@ -8,6 +8,8 @@ import base64
 
 from encryption.searchUser import searchUser
 from encryption.addToIndex import addToIndex
+from encryption.checkIfUIDExists import checkIfUIDExists
+
 import face_recognition
 
 from flask_socketio import SocketIO, send, emit
@@ -87,6 +89,13 @@ def handle_video(data, sid):
 @celery_app.task
 def handle_video_addToIndex(data, uid, sid):
     base64_string = data
+
+    uidExistResponse = checkIfUIDExists(uid)
+    if(uidExistResponse["code"] == 500):
+        return {"code": 500, "message": "Error while checking existence of UID"}
+    elif(uidExistResponse["code"] == 200 and uidExistResponse["value"] == True):
+        return {"code": 400, "message": "User already exists"}
+
 
     if "," in base64_string:
         base64_string = base64_string.split(",")[1]

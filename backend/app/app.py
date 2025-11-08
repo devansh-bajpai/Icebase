@@ -43,7 +43,6 @@ def handle_video_add(data):
     sid = request.sid
     base64_string = data["img"]
     uid = data["uid"]
-    print(uid, "yayaya")
 
     task = handle_video_addToIndex.delay(base64_string,uid, sid)
 
