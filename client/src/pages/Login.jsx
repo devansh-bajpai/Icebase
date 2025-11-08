@@ -22,7 +22,7 @@ export default function Login() {
         localStorage.setItem("token", res.data.token);
         setMessage({ text: 'Login successful! Redirecting to home...', type: 'success' });
         console.log("Login successful");
-        setTimeout(() => navigate("/"), 2000);
+        setTimeout(() => navigate("/dashboard"), 2000);
       } else {
         setMessage({ text: 'Login failed: No token received', type: 'error' });
       }
