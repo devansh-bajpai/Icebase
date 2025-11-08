@@ -8,7 +8,6 @@ export default function Dashboard() {
   const [apiKeys, setApiKeys] = useState([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(null);
-  const [newKey, setNewKey] = useState(null);
   const [socket, setSocket] = useState(null);
   const navigate = useNavigate();
 
@@ -78,7 +77,6 @@ export default function Dashboard() {
       setLoading(true);
       setMessage(null);
       const res = await createApiKey();
-      setNewKey(res.data.apiKey);
       setMessage({
         text: res.data.message || "API Key created successfully!",
         type: "success",
@@ -159,28 +157,6 @@ export default function Dashboard() {
               {loading ? "Creating..." : "Create New API Key"}
             </button>
           </div>
-
-          {newKey && (
-            <div className="new-key-alert">
-              <h3>⚠️ Important: Save this API key now!</h3>
-              <p>You won't be able to see it again after closing this message.</p>
-              <div className="key-display">
-                <code>{newKey}</code>
-                <button
-                  onClick={() => handleCopyKey(newKey)}
-                  className="btn-copy"
-                >
-                  Copy
-                </button>
-              </div>
-              <button
-                onClick={() => setNewKey(null)}
-                className="btn-close"
-              >
-                Close
-              </button>
-            </div>
-          )}
 
           {loading && apiKeys.length === 0 ? (
             <div className="loading">Loading API keys...</div>
