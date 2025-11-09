@@ -11,13 +11,26 @@ export default function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setMessage(""); // Clear previous messages
     try {
       const res = await registerUser(form);
-      setMessage(res.data.message);
-      console.log("Registration successful");
-      navigate("/verify-otp", { state: { email: form.email } });
+      // Check if registration was successful
+      if (res.data.success) {
+        setMessage(res.data.message);
+        console.log("Registration successful");
+        // Only navigate on success
+        setTimeout(() => {
+          navigate("/verify-otp", { state: { email: form.email } });
+        }, 1500);
+      } else {
+        // Registration failed but didn't throw error (shouldn't happen, but safety check)
+        setMessage(res.data.message || "Registration failed");
+      }
     } catch (err) {
-      setMessage(err.response?.data?.message|| "Email already exist");
+      // Handle errors (network errors, 4xx, 5xx responses)
+      const errorMessage = err.response?.data?.message || "Registration failed. Please try again.";
+      setMessage(errorMessage);
+      console.error("Registration error:", err);
     }
   };
 
