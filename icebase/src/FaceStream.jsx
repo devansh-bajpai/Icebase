@@ -1,93 +1,72 @@
-import React, { useRef, useState, useEffect } from 'react';
-import Webcam from 'react-webcam';
-import io from 'socket.io-client';
+import React, { useEffect, useRef } from "react";
+import { io } from "socket.io-client";
 
-export const FaceVerify = ({
-  backendUrl = "http://localhost:5000", // Flask backend socket URL
-  interval = 2000,
-  width = 400,
-  height,
-  facingMode = "user",
-  onResult = () => {},
-  loadingText = "Verifying...",
-  verifiedText = "Verified ✅",
-  unverifiedText = "No face detected ❌",
-  style = {},
-  webcamStyle = {}
-}) => {
-  const webcamRef = useRef(null);
-  const [status, setStatus] = useState('Waiting...');
-  const [isVerifying, setIsVerifying] = useState(false);
-  const [socket, setSocket] = useState(null);
+/**
+ * WebcamSocketStreamer
+ * 
+ * A reusable React component that:
+ * - Connects to a Socket.IO server
+ * - Streams webcam frames at a given interval
+ * - Sends each frame as a base64 JPEG to the server under a chosen event
+ * - Optionally listens for server events
+ * 
+ * Props:
+ * @param {string} serverUrl - Your Socket.IO server URL
+ * @param {string} emitEvent - The event name to emit frames with
+ * @param {number} [interval=5000] - How often to send frames (in ms)
+ * @param {string} [responseEvent] - Optional event name to listen for responses
+ * @param {function} [onResponse] - Callback when responseEvent data is received
+ * @param {number} [quality=0.7] - Image compression quality (0 to 1)
+ * @param {boolean} [showCanvas=false] - Whether to show the hidden canvas
+ */
+export default function WebcamStreamer({
+  serverUrl,
+  emitEvent,
+  interval = 5000,
+  responseEvent,
+  onResponse = () => {},
+  quality = 0.7,
+  showCanvas = false
+}) {
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
+  const socketRef = useRef(null);
 
   // Initialize Socket.IO connection
   useEffect(() => {
-    const newSocket = io(backendUrl, {
-      transports: ['websocket'],
-      reconnectionAttempts: 5,
-      reconnectionDelay: 2000,
-    });
-    setSocket(newSocket);
+    if (!serverUrl) {
+      console.error("WebcamSocketStreamer: Missing serverUrl prop");
+      return;
+    }
 
-    // Listen for verification results from the backend
-    newSocket.on('video_result', (data) => {
-      setIsVerifying(false);
-      const result = data.status;
-      const message = result === 'verified' ? verifiedText : unverifiedText;
-      setStatus(message);
-      onResult(result);
+    socketRef.current = io(serverUrl);
+
+    socketRef.current.on("connect", () => {
+      console.log("Connected with ID:", socketRef.current.id);
     });
 
-    newSocket.on('connect', () => console.log('Connected to backend socket.'));
-    newSocket.on('disconnect', () => console.log('Disconnected from backend.'));
+    if (responseEvent) {
+      socketRef.current.on(responseEvent, (data) => {
+        console.log(`Received ${responseEvent}:`, data);
+        onResponse(data);
+      });
+    }
 
-    return () => newSocket.disconnect();
-  }, [backendUrl]);
+    return () => {
+      if (responseEvent) socketRef.current.off(responseEvent);
+      socketRef.current.disconnect();
+    };
+  }, [serverUrl, responseEvent, onResponse]);
 
-  // Capture frame and send to backend via Socket.IO
-  const captureAndVerify = () => {
-    if (!webcamRef.current || !socket) return;
-
-    const imageSrc = webcamRef.current.getScreenshot();
-    if (!imageSrc) return;
-
-    setIsVerifying(true);
-    setStatus(loadingText);
-
-    socket.emit('sendImageWithVideo', { image: imageSrc });
-  };
-
-  // Run periodically
-  useEffect(() => {
-    const intervalId = setInterval(() => {
-      captureAndVerify();
-    }, interval);
-
-    return () => clearInterval(intervalId);
-  }, [interval, socket]);
+  
 
   return (
-    <div style={{ textAlign: 'center', marginTop: 20, ...style }}>
-      <h2>Face Verification</h2>
-
-      <Webcam
-        ref={webcamRef}
-        screenshotFormat="image/jpeg"
-        width={width}
-        height={height}
-        videoConstraints={{ facingMode }}
-        style={{
-          borderRadius: 10,
-          boxShadow: '0 0 10px rgba(0,0,0,0.2)',
-          ...webcamStyle
-        }}
+    <div>
+      <video ref={videoRef} style={{ display: "block", width: "100%" }} />
+      <canvas
+        ref={canvasRef}
+        style={{ display: showCanvas ? "block" : "none", width: "100%" }}
       />
-
-      <div style={{ marginTop: 10 }}>
-        {isVerifying ? <p>{loadingText}</p> : <h3>{status}</h3>}
-      </div>
     </div>
   );
-};
-
-export default FaceVerify;
+}
