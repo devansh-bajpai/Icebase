@@ -1,0 +1,13 @@
+celery
+redis
+flask
+python-socketio
+flask-socketio
+
+opencv-python
+numpy==1.26.4
+faiss-cpu==1.7.4
+python-dotenv
+face_recognition
+cryptography
+pymongo
