@@ -4,6 +4,8 @@ import WebcamStreamer from "./FaceStream"; // assuming FaceStream exports Webcam
 function App() {
   // State to hold server response
   const [serverData, setServerData] = useState(null);
+  // Icebase API key - in production, this should come from environment variables or secure storage
+  const [apiKey] = useState(process.env.REACT_APP_ICEBASE_API_KEY || "your-icebase-api-key-here");
 
   // Handle server response
   const handleServerResponse = (data) => {
@@ -17,6 +19,7 @@ function App() {
         <WebcamStreamer
           serverUrl="http://localhost:5000"
           emitEvent="findUserWithVideo"
+          apiKey={apiKey}
           responseEvent="verify-result"
           onResponse={handleServerResponse}
           interval={3000}
