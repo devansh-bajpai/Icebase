@@ -9,4 +9,7 @@ export default function ProtectedRoute({ children }) {
   
   return children;
 }
+<<<<<<< HEAD
 
+=======
+>>>>>>> 9ede3a764bdda6eb40b24e7bf98e491e9593fcc3

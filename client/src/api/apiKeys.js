@@ -19,5 +19,9 @@ export const listApiKeys = () =>
   axios.get(`${API_BASE}/keys`, getAuthHeaders());
 
 export const revokeApiKey = (id) => 
+<<<<<<< HEAD
   axios.delete(`${API_BASE}/keys/${id}`, getAuthHeaders());
 
+=======
+  axios.delete(`${API_BASE}/keys/${id}`, getAuthHeaders());
+>>>>>>> 9ede3a764bdda6eb40b24e7bf98e491e9593fcc3

@@ -9,12 +9,15 @@ import { Server } from "socket.io";
 import authRoutes from "./routes/authRoutes.js";
 import passwordRoutes from "./routes/passwordRoutes.js";
 import apiKeyRoutes from "./routes/apiKeyRoutes.js";
+<<<<<<< HEAD
 import { authenticateSocket } from "./utils/socketAuth.js";
 import {
   setIO,
   registerUserSocket,
   unregisterUserSocket,
 } from "./utils/socketManager.js";
+=======
+>>>>>>> 9ede3a764bdda6eb40b24e7bf98e491e9593fcc3
 
 dotenv.config();
 

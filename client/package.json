@@ -14,7 +14,11 @@
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-router-dom": "^7.9.5",
+<<<<<<< HEAD
     "socket.io-client": "^4.7.5"
+=======
+    "socket.io-client": "^4.8.1"
+>>>>>>> 9ede3a764bdda6eb40b24e7bf98e491e9593fcc3
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",
