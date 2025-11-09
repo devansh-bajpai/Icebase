@@ -165,6 +165,47 @@ def detect_blink_in_frame(rgb_frame, session_id):
     
     return False, "Could not detect eye landmarks. Please ensure good lighting."
 
+@socketio.on('connect')
+def handle_connect():
+    print(f"Client connected: {request.sid}")
+
+@socketio.on('disconnect')
+def handle_disconnect():
+    print(f"Client disconnected: {request.sid}")
+    # Clean up session state
+    if request.sid in session_blink_state:
+        del session_blink_state[request.sid]
+
+@socketio.on('checkBlink')
+def handle_check_blink(data):
+    """Handle blink detection request"""
+    session_id = request.sid
+    
+    try:
+        # Decode image
+        rgb_frame = decode_image(data.get('img', ''))
+        if rgb_frame is None:
+            emit('blinkResult', {
+                'blinkDetected': False,
+                'message': 'Error decoding image'
+            })
+            return
+        
+        # Detect blink
+        blink_detected, message = detect_blink_in_frame(rgb_frame, session_id)
+        
+        emit('blinkResult', {
+            'blinkDetected': blink_detected,
+            'message': message
+        })
+        
+    except Exception as e:
+        print(f"Error in checkBlink: {e}")
+        emit('blinkResult', {
+            'blinkDetected': False,
+            'message': f'Error: {str(e)}'
+        })
+
 if __name__ == '__main__':
     print("Starting Flask-SocketIO server on http://localhost:5000")
     print("Make sure FAISS index and labels are loaded before authentication")
