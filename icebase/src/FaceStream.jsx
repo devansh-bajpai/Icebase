@@ -58,7 +58,54 @@ export default function WebcamStreamer({
     };
   }, [serverUrl, responseEvent, onResponse]);
 
-  
+  // Stream webcam frames
+  useEffect(() => {
+    if (!emitEvent) {
+      console.error("WebcamSocketStreamer: Missing emitEvent prop");
+      return;
+    }
+
+    navigator.mediaDevices
+      .getUserMedia({ video: true })
+      .then((stream) => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          videoRef.current.play();
+        }
+
+        const sendFrame = () => {
+          if (
+            socketRef.current &&
+            socketRef.current.connected &&
+            videoRef.current &&
+            videoRef.current.readyState === 4
+          ) {
+            const canvas = canvasRef.current;
+            const ctx = canvas.getContext("2d");
+            canvas.width = videoRef.current.videoWidth;
+            canvas.height = videoRef.current.videoHeight;
+
+            ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+
+            const frameData = canvas.toDataURL("image/jpeg", quality);
+
+            socketRef.current.emit(emitEvent, { img: frameData });
+            console.log(`Frame emitted to "${emitEvent}"`);
+          }
+
+          setTimeout(() => requestAnimationFrame(sendFrame), interval);
+        };
+
+        sendFrame();
+      })
+      .catch((err) => {
+        console.error("Error accessing webcam:", err);
+      });
+
+    return () => {
+      if (socketRef.current) socketRef.current.disconnect();
+    };
+  }, [emitEvent, interval, quality]);
 
   return (
     <div>
