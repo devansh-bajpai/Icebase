@@ -10,12 +10,12 @@ Branches for Evaluation: `encrypted-merge` and `auth`
 Please consider this Branch for evaluation, instead of main.
 
 ## Introduction
-Icebase is a full-stack dashboard application that allows users to manage API keys, track logs, and visualize data using Chart.js. It integrates authentication, API services, and a real-time logging system, providing a scalable and user-friendly interface for web applications.
+Icebase is a system of a NPM package and a dashboard for developers, the package provides reusable components along with our own SCALABLE and DISTRIBUTABLE cloud-based API service and database with locally hosted LLM, which brings powerful combination and integration of services directly to your web applications with complete customizations and easy integration. 
 
 ## Demo Video Link
 <a href="#">https://youtu.be/UrrttZF2kMQ</a>
 
-## Features
+## Developer Dashboard Features
 - User authentication and session management  
 - Create, revoke, and copy API keys  
 - Track and display logs per API key  
