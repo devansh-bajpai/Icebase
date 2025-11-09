@@ -1,5 +1,5 @@
 import express from "express";
-import Log from "../models/Log.js";
+import Log from "../models/log.js";
 
 const router = express.Router();
 
